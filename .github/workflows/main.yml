@@ -17,7 +17,9 @@ jobs:
           VOODOOSMBUS_SHA: VoodooSMBus-${{ steps.vars.outputs.sha_short }}
         run: |
           mkdir build
-          xcodebuild -sdk macosx -scheme VoodooSMBus build CONFIGURATION_BUILD_DIR=build/${VOODOOSMBUS_SHA}
+          xcodebuild -sdk macosx -scheme VoodooSMBus build \
+            ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO \
+            CONFIGURATION_BUILD_DIR=build/${VOODOOSMBUS_SHA}
           mv build/${VOODOOSMBUS_SHA}/VoodooSMBus.kext build/${VOODOOSMBUS_SHA}/${VOODOOSMBUS_SHA}.kext
       - uses: actions/upload-artifact@v4
         with:
