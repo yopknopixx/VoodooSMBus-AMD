@@ -4,26 +4,22 @@ on: [push, pull_request]
 
 jobs:
   build:
-
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v1
-    - name: Checkout submodules
-      run: git submodule update --init
-    - name: get shortsha
-      id: vars
-      run: |
-        echo ::set-output name=sha_short::$(git rev-parse --short=8 ${{ github.sha }})
-    - name: build
-      env:
-          DEVELOPER_DIR: /Applications/Xcode_10.3.app/Contents/Developer
+      - uses: actions/checkout@v4
+      - name: Checkout submodules
+        run: git submodule update --init
+      - name: Get short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short=8 ${{ github.sha }})" >> "$GITHUB_OUTPUT"
+      - name: Build
+        env:
           VOODOOSMBUS_SHA: VoodooSMBus-${{ steps.vars.outputs.sha_short }}
-      run: |
-        mkdir build
-        xcodebuild -sdk macosx10.14 -scheme VoodooSMBus build CONFIGURATION_BUILD_DIR=build/${VOODOOSMBUS_SHA}
-        mv build/${VOODOOSMBUS_SHA}/VoodooSMBus.kext build/${VOODOOSMBUS_SHA}/${VOODOOSMBUS_SHA}.kext
-    - uses: actions/upload-artifact@v2
-      with:
-        name: VoodooSMBus
-        path: build/VoodooSMBus-*
-  
+        run: |
+          mkdir build
+          xcodebuild -sdk macosx -scheme VoodooSMBus build CONFIGURATION_BUILD_DIR=build/${VOODOOSMBUS_SHA}
+          mv build/${VOODOOSMBUS_SHA}/VoodooSMBus.kext build/${VOODOOSMBUS_SHA}/${VOODOOSMBUS_SHA}.kext
+      - uses: actions/upload-artifact@v4
+        with:
+          name: VoodooSMBus
+          path: build/VoodooSMBus-*

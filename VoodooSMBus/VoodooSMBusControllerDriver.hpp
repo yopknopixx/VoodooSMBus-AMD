@@ -18,12 +18,21 @@
 #include <IOKit/IOKitKeys.h>
 #include <IOKit/IOService.h>
 #include <IOKit/IOFilterInterruptEventSource.h>
+#include <IOKit/IOTimerEventSource.h>
 #include <IOKit/pci/IOPCIDevice.h>
 #include <IOKit/acpi/IOACPIPlatformDevice.h>
 #include <IOKit/IOPlatformExpert.h>
+#include <IOKit/IOMemoryDescriptor.h>
 #include "i2c_i801.cpp"
 #include "VoodooSMBusDeviceNub.hpp"
 #include "HostNotifyMessage.h"
+
+/* AMD FCH KERNCZ SMBus constants (from Linux arch/x86/include/asm/amd/fch.h) */
+#define AMD_FCH_PM_BASE     ((IOPhysicalAddress)0xFED80300ULL)
+#define AMD_FCH_PM_SIZE     8
+#define AMD_SMBA_ENABLE_BIT 0x10   /* bit 4 of smba_en_lo: SMBus enable */
+#define AMD_VENDOR_ID       0x1022
+#define AMD_KERNCZ_SMBUS_ID 0x790B
 
 /* Helper struct so we are able to pass more than 4 arguments to `transferGated(..)` */
 typedef struct  {
@@ -133,7 +142,12 @@ private:
     IOCommandGate* command_gate;
     IOWorkLoop* work_loop;
     IOInterruptEventSource* interrupt_source;
+    IOTimerEventSource* poller;
     bool awake;
+    bool isAMD;
+    
+    unsigned short getAMDSMBusBase();
+    void pollTimerCallback(OSObject* owner, IOTimerEventSource* src);
     
     IOReturn publishNub(UInt8 address);
     IOReturn publishMultipleNubs();
